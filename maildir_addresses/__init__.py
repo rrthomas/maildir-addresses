@@ -47,6 +47,9 @@ def walk_die(err):
 
 def parse_maildirs(maildir_root: Path) -> None:
     for dirpath, dirs, _ in maildir_root.walk(on_error=walk_die):
+        # TODO: Make this list configurable
+        if dirpath.name.lower() in (".junk", ".spam"):
+            continue
         if "cur" in dirs and "new" in dirs and "tmp" in dirs:
             warn(f"processing {dirpath}")
             parse_maildir(dirpath)
