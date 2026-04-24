@@ -8,15 +8,48 @@ Released under the GPL version 3, or (at your option) any later version.
 import argparse
 import importlib.metadata
 import logging
+import mailbox
 import os
 import sys
 import warnings
+from pathlib import Path
 
 from .subcommand import commands
-from .warnings_util import die, simple_warning
+from .warnings_util import die, simple_warning, warn
 
 
 VERSION = importlib.metadata.version("maildir_addresses")
+
+
+def parse_maildir(maildir_path: os.PathLike) -> None:
+    emails = set()
+
+    # Open Maildir
+    mbox = mailbox.Maildir(maildir_path)
+    for key in mbox.iterkeys():
+        message = mbox[key]
+
+        # Check headers: From, To, Cc
+        for header in ("From", "To", "Cc"):
+            values = message.get_all(header)
+            if values is not None:
+                for value in values:
+                    emails.add(str(value).lower())
+
+    # Output results
+    for mail in sorted(emails):
+        print(mail)
+
+
+def walk_die(err):
+    raise err
+
+
+def parse_maildirs(maildir_root: Path) -> None:
+    for dirpath, dirs, _ in maildir_root.walk(on_error=walk_die):
+        if "cur" in dirs and "new" in dirs and "tmp" in dirs:
+            warn(f"processing {dirpath}")
+            parse_maildir(dirpath)
 
 
 def main(argv: list[str] = sys.argv[1:]) -> None:
@@ -36,8 +69,9 @@ Distributed under the GNU General Public License version 3, or (at
 your option) any later version. There is no warranty.""",
     )
     parser.add_argument(
-        "--greeting",
-        help="specify the greeting to use",
+        "mail_root",
+        metavar="MAIL-DIRECTORY",
+        help="maildir root directory",
     )
     warnings.showwarning = simple_warning(parser.prog)
 
@@ -57,7 +91,7 @@ your option) any later version. There is no warranty.""",
         if "func" in args:
             args.func(args)
         else:
-            print(f"{args.greeting or 'Hello'} from maildir-addresses!")
+            parse_maildirs(Path(args.mail_root))
     except Exception as err:
         if "DEBUG" in os.environ:
             logging.error(err, exc_info=True)
