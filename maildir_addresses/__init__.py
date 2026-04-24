@@ -6,12 +6,14 @@ Released under the GPL version 3, or (at your option) any later version.
 """
 
 import argparse
+import csv
 import importlib.metadata
 import logging
 import mailbox
 import os
 import sys
 import warnings
+from email.utils import getaddresses
 from pathlib import Path
 
 from .subcommand import commands
@@ -21,8 +23,11 @@ from .warnings_util import die, simple_warning, warn
 VERSION = importlib.metadata.version("maildir_addresses")
 
 
+csv.register_dialect("mailcsv", skipinitialspace=True)
+
+
 def parse_maildir(maildir_path: os.PathLike) -> None:
-    emails = set()
+    emails = {}
 
     # Open Maildir
     mbox = mailbox.Maildir(maildir_path)
@@ -31,14 +36,13 @@ def parse_maildir(maildir_path: os.PathLike) -> None:
 
         # Check headers: From, To, Cc
         for header in ("From", "To", "Cc"):
-            values = message.get_all(header)
-            if values is not None:
-                for value in values:
-                    emails.add(str(value).lower())
+            addrs = getaddresses(message.get_all(header, []))
+            for name, addr in addrs:
+                emails[addr.lower()] = name
 
     # Output results
     for mail in sorted(emails):
-        print(mail)
+        print(f'"{emails[mail]}" <{mail}>')
 
 
 def walk_die(err):
