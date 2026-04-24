@@ -12,7 +12,7 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Install Python dependencies
         run: pip install tox build
       - name: Build
@@ -33,9 +33,9 @@ jobs:
       GH_TOKEN: ${{ github.token }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Install Python (Windows, macOS)
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         if: ${{ matrix.os != 'ubuntu-20.04' }}
         with:
           python-version: "3.12"
