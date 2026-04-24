@@ -3,7 +3,7 @@
 https://github.com/rrthomas/maildir-addresses  
 © Reuben Thomas <rrt@sc3d.org>  
 
-maildir-addresses is Scan a maildir tree for email addresses in From/To/Cc headers.
+maildir-addresses is a tool to scan a maildir tree for email addresses in From/To/Cc headers.
 
 
 ## Installation
